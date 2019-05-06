@@ -9,6 +9,10 @@ import cv2
 import PIL.Image, PIL.ImageTk
 import time
 
+from imutils import paths
+import numpy as np
+import imutils
+
 class App:
    def __init__(self, window, window_title, video_source=0):
          self.window = window
@@ -58,8 +62,10 @@ class App:
      ret, frame = self.vid.get_frame()
      if ret:
         cv2.imwrite("frame-" + time.strftime("%d-%m-%Y-%H-%M-%S") + ".jpg", cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+
    def pause(self):
       self.pause = true
+
 class MyVideoCapture:
     def __init__(self, video_source=0):
       #open the video source
@@ -75,8 +81,6 @@ class MyVideoCapture:
     def __del__(self):
       if self.vid.isOpened():
          self.vid.release()
-         
-      
 
     def get_frame(self):
       if self.vid.isOpened():
@@ -88,7 +92,25 @@ class MyVideoCapture:
             return (ret, None)
       else:
          return (ret, None)
-      
+
+    # coutour image from snapshot image
+
+
+    def find_marker(frame):
+        # convert the image to grayscale, blur it, and detect edges
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (5, 5), 0)
+        edged = cv2.Canny(gray, 35, 125)
+
+        # find the contours in the edged image and keep the largest one;
+        # we'll assume that this is our piece of paper in the image
+        cnts = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = imutils.grab_contours(cnts)
+        c = max(cnts, key=cv2.contourArea)
+
+        # compute the bounding box of the of the paper region and return it
+        return cv2.minAreaRect(c)
  # Create a window and pass it to the Application object
  #this is where we call the video file
 App(tkinter.Tk(), "R2D2", "puppy.mov")
+
