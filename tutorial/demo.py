@@ -73,17 +73,19 @@ class App:
 
    def update(self):
       if (self.pause == False) or (self.bypass_pause):
-         #get a frame from source
-         self.bypass_pause=False
-         ret, self.frame = self.vid.get_frame()
-         #line marking center of feed
-         cv2.line(self.frame,(int(self.vid.width/2),0),(int(self.vid.width/2),int(self.vid.height)),(0,0,0),1)
-         if ret:
-            self.frame_list.append(self.frame.copy())
-            self.clean_frame=self.frame.copy()
-            self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.frame))
-            self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
-
+         if(self.framelist_idx == max_buffer-1):
+            #get a frame from source
+            self.bypass_pause=False
+            ret, self.frame = self.vid.get_frame()
+            #line marking center of feed
+            cv2.line(self.frame,(int(self.vid.width/2),0),(int(self.vid.width/2),int(self.vid.height)),(0,0,0),1)
+            if ret:
+               self.frame_list.append(self.frame.copy())
+               self.clean_frame=self.frame.copy()
+               self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.frame))
+               self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
+         else:
+            self.stepF()
       else:
          time.sleep(.02)
       if len(self.frame_list)>max_buffer:
