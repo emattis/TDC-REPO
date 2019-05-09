@@ -29,45 +29,63 @@ class App:
          self.bypass_pause=False
          self.framelist_idx=max_buffer-1
 
+         rows = 0
+         while rows <10:
+            window.columnconfigure(rows,weight = 1)
+            window.rowconfigure(rows,weight = 1)
+            rows +=1
+
          
          #open video source
          self.cam = MyVideoCapture(video_source)
          self.vid = MyVideoCapture(video_source)
          #create canvas
          self.canvas = tkinter.Canvas(window, width=self.vid.width, height=self.vid.height)
-         self.canvas.grid(column=0, row=0, columnspan=3, rowspan=2)
+
+         self.canvas.grid(column=0, row=0, columnspan=7)
          self.canvas.bind("<ButtonPress-1>", self.click_and_crop1)
          self.canvas.bind("<ButtonRelease-1>", self.click_and_crop2)
 
          #button that lets user pause the video
-         self.btn_pause=tkinter.Button(window, text="Pause", width=15, command=self.stop)
-         self.btn_pause.grid(column=0, row=3)
+         self.btn_pause=tkinter.Button(window, text="Pause", width=10, command=self.stop)
+         self.btn_pause.grid(column=1, row=3)
          #button that lets user play the video
-         self.btn_play=tkinter.Button(window, text="Play", width=15, command=self.play)
+         self.btn_play=tkinter.Button(window, text="Play", width=10, command=self.play)
          self.btn_play.grid(column=2, row=3)
-         self.btn_play=tkinter.Button(window, text="Step_F", width=15, command=self.stepF)
+         self.btn_play=tkinter.Button(window, text="Step_F", width=10, command=self.stepF)
          self.btn_play.grid(column=3, row=3)
-         self.btn_play=tkinter.Button(window, text="Step_B", width=15, command=self.stepB)
-         self.btn_play.grid(column=3, row=4)
-         self.btn_play=tkinter.Button(window, text="Clean", width=15, command=self.clean)
-         self.btn_play.grid(column=1, row=4)
+         self.btn_play=tkinter.Button(window, text="Step_B", width=10, command=self.stepB)
+         self.btn_play.grid(column=0, row=3)
+         self.btn_play=tkinter.Button(window, text="Clean", width=10, command=self.clean)
+         self.btn_play.grid(column=4, row=3)
          # Button that lets the user take a snapshot
-         self.btn_snapshot=tkinter.Button(window, text="Snapshot", width=15, command=self.snapshot)
-         self.btn_snapshot.grid(column=1, row=3)
+         self.btn_snapshot=tkinter.Button(window, text="Snapshot", width=10, command=self.snapshot)
+         self.btn_snapshot.grid(column=5, row=3)
 
          #where we enter the information to complete the algorithm
-         self.detail=tkinter.Frame(window,borderwidth=5, relief="sunken", width=500, height=300)
-         self.detail.grid(column=4, row=0)
-         
+         self.detail=tkinter.Frame(window,borderwidth=5, relief="sunken")
+         self.detail.grid(column=8, row=0)
+            
          self.lsum = tkinter.Label(self.detail, text = 'The sum is:')
-         self.lsum.grid(row=5, column=1, pady=4)
+         self.lsum.grid(row=5, column=0, pady=4)
+         self.threat_name_Label = tkinter.Label(self.detail, text='Threat Name')
+         self.threat_name_Label.grid(row=4, column=1)
+         self.threat_name = tkinter.Entry(self.detail)
+         self.threat_name.grid(row=5, column=1)
+         self.threat_desc_Label = tkinter.Label(self.detail, text='Threat Description')
 
+         self.threat_desc_Label.grid(row=4, column=2)
+         self.threat_desc = tkinter.Entry(self.detail)
+         self.threat_desc.grid(row=5, column=2)                                       
+
+         self.btn_save = tkinter.Button(self.detail, text="Save", width=10, command=self.save)
+         self.btn_save.grid(row=5, column=3)
 
          self.snap_canvas = tkinter.Canvas(self.detail, width=self.vid.width, height=self.vid.height)
          self.snap_canvas.grid(column=0, row=0, columnspan=3, rowspan=2)
          #where we display the list of threats for a given mission
-         self.threats=tkinter.Frame(window, width=500, height=300)
-         self.threats.grid(column=4, row=3)
+         self.threats=tkinter.Frame(window, height=100)
+         self.threats.grid(column=8, row=3)
          #auto call until stopped
          self.delay = 15
          self.update()
@@ -157,9 +175,14 @@ class App:
       self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.frame))
       self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
       self.snapshot(1)
-      self.lsum["text"] = "The sum is: " + str(11*256/(self.refPt[1][1]-self.refPt[0][1]))
+      self.sum = str(11*256/(self.refPt[1][1]-self.refPt[0][1]))
+      self.lsum["text"] = "The sum is: " + self.sum
 
-
+   def save(self):
+      file_name=self.threat_name.get()
+      with open(file_name+".csv", 'w') as file_object:
+         file_object.write(self.threat_name.get() + "," + self.threat_desc.get() +"," + self.sum)
+      
 
       
 class MyVideoCapture:
