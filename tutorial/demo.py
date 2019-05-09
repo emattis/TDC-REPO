@@ -55,10 +55,14 @@ class App:
          self.btn_snapshot=tkinter.Button(window, text="Snapshot", width=15, command=self.snapshot)
          self.btn_snapshot.grid(column=1, row=3)
 
-
          #where we enter the information to complete the algorithm
          self.detail=tkinter.Frame(window,borderwidth=5, relief="sunken", width=500, height=300)
          self.detail.grid(column=4, row=0)
+         
+         self.lsum = tkinter.Label(self.detail, text = 'The sum is:')
+         self.lsum.grid(row=5, column=1, pady=4)
+
+
          self.snap_canvas = tkinter.Canvas(self.detail, width=self.vid.width, height=self.vid.height)
          self.snap_canvas.grid(column=0, row=0, columnspan=3, rowspan=2)
          #where we display the list of threats for a given mission
@@ -153,7 +157,8 @@ class App:
       self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.frame))
       self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
       self.snapshot(1)
-      
+      self.lsum["text"] = "The sum is: " + str(11*256/(self.refPt[1][1]-self.refPt[0][1]))
+
 
 
       
