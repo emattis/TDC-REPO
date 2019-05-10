@@ -35,11 +35,12 @@ class App:
             window.rowconfigure(rows,weight = 1)
             rows +=1
 
-         
          #open video source
          self.cam = MyVideoCapture(video_source)
          self.vid = MyVideoCapture(video_source)
          #create canvas
+
+           
          self.canvas = tkinter.Canvas(window, width=self.vid.width, height=self.vid.height)
 
          self.canvas.grid(column=0, row=0, columnspan=7)
@@ -65,7 +66,10 @@ class App:
          #where we enter the information to complete the algorithm
          self.detail=tkinter.Frame(window,borderwidth=5, relief="sunken")
          self.detail.grid(column=8, row=0)
-            
+         self.mission_name_Label = tkinter.Label(self.detail, text='Mission Name')
+         self.mission_name_Label.grid(row=0, column=9)
+         self.mission_name = tkinter.Entry(self.detail)
+         self.mission_name.grid(row=1, column=9)   
          self.lsum = tkinter.Label(self.detail, text = 'The sum is:')
          self.lsum.grid(row=5, column=0, pady=4)
          self.threat_name_Label = tkinter.Label(self.detail, text='Threat Name')
@@ -79,7 +83,9 @@ class App:
          self.threat_desc.grid(row=5, column=2)                                       
 
          self.btn_save = tkinter.Button(self.detail, text="Save", width=10, command=self.save)
-         self.btn_save.grid(row=5, column=3)
+         self.btn_save.grid(row=4, column=3)
+         self.btn_clear = tkinter.Button(self.detail, text="Clear", width=10, command=self.clear)
+         self.btn_clear.grid(row=5, column=3)
 
          self.snap_canvas = tkinter.Canvas(self.detail, width=self.vid.width, height=self.vid.height)
          self.snap_canvas.grid(column=0, row=0, columnspan=3, rowspan=2)
@@ -179,9 +185,15 @@ class App:
       self.lsum["text"] = "The sum is: " + self.sum
 
    def save(self):
-      file_name=self.threat_name.get()
-      with open(file_name+".csv", 'w') as file_object:
+      file_name=self.mission_name.get()
+      with open(file_name+".csv", 'a+') as file_object:
          file_object.write(self.threat_name.get() + "," + self.threat_desc.get() +"," + self.sum)
+      self.clear()
+
+   def clear(self):
+      self.threat_name.delete(0,'end')
+      self.threat_desc.delete(0, 'end')
+      self.lsum["text"] = "The sum is: "
       
 
       
