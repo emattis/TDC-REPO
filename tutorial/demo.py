@@ -65,6 +65,22 @@ class App:
          self.btn_snapshot=tkinter.Button(window, text="Snapshot", width=10, command=self.snapshot)
          self.btn_snapshot.grid(column=5, row=3)
 
+
+         self.latitude_label=tkinter.Label(window, text="Latitude")
+         self.latitude_label.grid(column=0, row=4)
+         self.latitude=tkinter.Entry(window)
+         self.latitude.grid(column=1, row=4)
+
+         self.longitude_label=tkinter.Label(window, text="Longitude")
+         self.longitude_label.grid(column=2, row=4)
+         self.longitude=tkinter.Entry(window)
+         self.longitude.grid(column=3, row=4)
+
+         self.altitude_label=tkinter.Label(window, text="Altitude")
+         self.altitude_label.grid(column=4, row=4)
+         self.altitude=tkinter.Entry(window)
+         self.altitude.grid(column=5, row=4)
+         
          #where we enter the information to complete the algorithm
          self.detail=tkinter.Frame(window,borderwidth=5, relief="sunken")
          self.detail.grid(column=8, row=0)
