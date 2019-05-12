@@ -8,6 +8,8 @@ import tkinter
 import cv2
 import PIL.Image, PIL.ImageTk
 import time
+import csv
+
 out_title="Mission_Film-" + time.strftime("%d-%m-%Y-%H-%M-%S") + ".avi"
 cap = cv2.VideoCapture(0)
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -91,7 +93,14 @@ class App:
          self.snap_canvas.grid(column=0, row=0, columnspan=3, rowspan=2)
          #where we display the list of threats for a given mission
          self.threats=tkinter.Frame(window, height=100)
-         self.threats.grid(column=8, row=3)
+         self.threats.grid(column=8, row=2)
+
+
+         self.threat_label = tkinter.Label(self.threats, text = "Threat List")
+         self.threat_label.grid(column=0, row=0, pady=4)
+         
+                
+         
          #auto call until stopped
          self.delay = 15
          self.update()
@@ -187,16 +196,29 @@ class App:
    def save(self):
       file_name=self.mission_name.get()
       with open(file_name+".csv", 'a+') as file_object:
-         file_object.write(self.threat_name.get() + "," + self.threat_desc.get() +"," + self.sum)
+         file_object = csv.writer(file_object, delimiter=',',quotechar='"', quoting=csv.QUOTE_MINIMAL)
+         file_object.writerow([self.threat_name.get(), self.threat_desc.get(), self.sum])
       self.clear()
+      self.loadFile()
 
    def clear(self):
       self.threat_name.delete(0,'end')
       self.threat_desc.delete(0, 'end')
-      self.lsum["text"] = "The sum is: "
       
-
-      
+   def loadFile(self):
+      file_name=self.mission_name.get()
+      if file_name != "":
+         with open(file_name+".csv") as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            r=1
+            for col in csv_reader:
+               c=0
+               for row in col:
+                  label = tkinter.Label(self.threats, text = row, relief = tkinter.RIDGE)
+                  label.grid(row=r, column =c)
+                  c += 1
+            r += 1
+   
 class MyVideoCapture:
     def __init__(self, video_source=0):
       #open the video source
