@@ -14,6 +14,7 @@ out_title="Mission_Film-" + time.strftime("%d-%m-%Y-%H-%M-%S") + ".avi"
 cap = cv2.VideoCapture(0)
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 out = cv2.VideoWriter(out_title,fourcc, 20.0, (640,480))
+
 max_buffer=50
 
 class App:
@@ -21,7 +22,7 @@ class App:
          self.window = window
          self.window.title(window_title)
          self.video_source = video_source
-         self.pause = False
+         self.pause = True
          self.refPt = []
          self.frame = 1
          self.frame_list = []
@@ -100,13 +101,13 @@ class App:
          self.threat_label.grid(column=0, row=0, pady=4)
          
                 
-         
          #auto call until stopped
          self.delay = 15
+  
          self.update()
 
-
          self.window.mainloop()
+
 
    def update(self):
       if (self.pause == False) or (self.bypass_pause):
@@ -135,6 +136,8 @@ class App:
      # Get a frame from the video source
      if sub_frame_ctrl == 1:
        sub_frame = self.clean_frame[self.refPt[0][1]:self.refPt[1][1], self.refPt[0][0]:self.refPt[1][0]]
+       imgScale = 600/sub_frame.shape[1]
+       sub_frame = cv2.resize(sub_frame,(int(sub_frame.shape[1]*imgScale),int(sub_frame.shape[0]*imgScale)))
      else:
        sub_frame=self.frame
      self.photo2 = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(sub_frame))
