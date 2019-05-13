@@ -9,8 +9,11 @@ import cv2
 import PIL.Image, PIL.ImageTk
 import time
 import csv
+import numpy
+import math 
 
 out_title="Mission_Film-" + time.strftime("%d-%m-%Y-%H-%M-%S") + ".avi"
+
 cap = cv2.VideoCapture(0)
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 out = cv2.VideoWriter(out_title,fourcc, 20.0, (640,480))
@@ -31,6 +34,18 @@ class App:
          cropping = False
          self.bypass_pause=False
          self.framelist_idx=max_buffer-1
+
+         self.dist_to_targ=0
+         self.ground_distance=0
+         self.targ_lat=0
+         self.targ_long=0  
+         
+         self.target_size=4 #four foot target in meters
+         self.focal= 256  #figure this out
+
+
+
+      
 
          rows = 0
          while rows <10:
@@ -65,8 +80,7 @@ class App:
          # Button that lets the user take a snapshot
          self.btn_snapshot=tkinter.Button(window, text="Snapshot", width=10, command=self.snapshot)
          self.btn_snapshot.grid(column=5, row=3)
-
-
+         
          self.latitude_label=tkinter.Label(window, text="Latitude")
          self.latitude_label.grid(column=0, row=4)
          self.latitude=tkinter.Entry(window)
@@ -81,27 +95,38 @@ class App:
          self.altitude_label.grid(column=4, row=4)
          self.altitude=tkinter.Entry(window)
          self.altitude.grid(column=5, row=4)
-         
+
+         self.compass_label=tkinter.Label(window, text="Compass Heading")
+         self.compass_label.grid(column=6, row=4)
+         self.compass=tkinter.Entry(window)
+         self.compass.grid(column=7, row=4)
+
+
          #where we enter the information to complete the algorithm
          self.detail=tkinter.Frame(window,borderwidth=5, relief="sunken")
          self.detail.grid(column=8, row=0)
          self.mission_name_Label = tkinter.Label(self.detail, text='Mission Name')
          self.mission_name_Label.grid(row=0, column=9)
          self.mission_name = tkinter.Entry(self.detail)
+         self.mission_name.insert(10,"Mission-" + time.strftime("%d-%m-%Y-%H-%M-%S"))
+
          self.mission_name.grid(row=1, column=9)   
-         self.lsum = tkinter.Label(self.detail, text = 'The sum is:')
+         self.lsum = tkinter.Label(self.detail, text = 'AV->Targ:')
          self.lsum.grid(row=5, column=0, pady=4)
          self.threat_name_Label = tkinter.Label(self.detail, text='Threat Name')
          self.threat_name_Label.grid(row=4, column=1)
          self.threat_name = tkinter.Entry(self.detail)
+         self.threat_name.insert(10,"New_Threat")
          self.threat_name.grid(row=5, column=1)
          self.threat_desc_Label = tkinter.Label(self.detail, text='Threat Description')
 
          self.threat_desc_Label.grid(row=4, column=2)
          self.threat_desc = tkinter.Entry(self.detail)
+         self.threat_desc.insert(10,"New_Threat")
          self.threat_desc.grid(row=5, column=2)                                       
 
-         self.btn_save = tkinter.Button(self.detail, text="Save", width=10, command=self.save)
+         self.btn_save = tkinter.Button(self.detail, text="Calculate", width=10, command=self.save)
+         self.btn_save.config(state="disabled")
          self.btn_save.grid(row=4, column=3)
          self.btn_clear = tkinter.Button(self.detail, text="Clear", width=10, command=self.clear)
          self.btn_clear.grid(row=5, column=3)
@@ -119,13 +144,13 @@ class App:
                 
          #auto call until stopped
          self.delay = 15
-  
-         self.update()
 
+         self.update()
          self.window.mainloop()
 
-
    def update(self):
+      ret, frame = cap.read()
+      out.write(frame)
       if (self.pause == False) or (self.bypass_pause):
          if(self.framelist_idx == max_buffer-1):
             #get a frame from source
@@ -144,8 +169,7 @@ class App:
          time.sleep(.02)
       if len(self.frame_list)>max_buffer:
          self.frame_list.pop(0)
-      ret, frame = cap.read()
-      out.write(frame)
+
       self.window.after(self.delay, self.update)
 
    def snapshot(self, sub_frame_ctrl=0):
@@ -209,14 +233,30 @@ class App:
       self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.frame))
       self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
       self.snapshot(1)
-      self.sum = str(11*256/(self.refPt[1][1]-self.refPt[0][1]))
-      self.lsum["text"] = "The sum is: " + self.sum
+      self.dist_to_targ = str(self.target_size*self.focal/(self.refPt[1][1]-self.refPt[0][1]))
+      self.lsum["text"] = "AV->Targ: " + self.dist_to_targ
+      print(self.refPt[1][1]-self.refPt[0][1])
+      self.btn_save.config(state="normal")
 
    def save(self):
       file_name=self.mission_name.get()
+      self.ground_distance=math.sqrt(pow(float(self.dist_to_targ),2)-pow(float(self.altitude.get()),2))
+      compass=math.radians(float(self.compass.get()))
+      lat_mask=1
+      long_mask=1
+      if compass>90 and compass<=180:
+         long_mask=-1
+      elif compass>180 and compass<=270:
+         long_mask=-1
+         lat_mask=-1
+      elif compass>270 and compass<360:
+         lat_mask=-1
+      self.targ_lat=float(self.latitude.get())+((lat_mask*float(self.ground_distance)*math.sin(float(compass)))/364000)
+      self.targ_long=float(self.longitude.get())+((long_mask*float(self.ground_distance)*math.cos(float(compass)))/288200)
       with open(file_name+".csv", 'a+') as file_object:
          file_object = csv.writer(file_object, delimiter=',',quotechar='"', quoting=csv.QUOTE_MINIMAL)
-         file_object.writerow([self.threat_name.get(), self.threat_desc.get(), self.sum])
+         file_object.writerow([self.threat_name.get(), self.threat_desc.get(), self.targ_lat,self.targ_long ])
+
       self.clear()
       self.loadFile()
 
@@ -236,7 +276,7 @@ class App:
                   label = tkinter.Label(self.threats, text = row, relief = tkinter.RIDGE)
                   label.grid(row=r, column =c)
                   c += 1
-            r += 1
+               r += 1
    
 class MyVideoCapture:
     def __init__(self, video_source=0):
